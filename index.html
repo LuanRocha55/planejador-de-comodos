@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Planejador 2D de cômodos e móveis no navegador: arraste, gire, redimensione e exporte a planta em PNG.">
+  <title>Multi-Room Architecture Planner</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <!-- Fontes (opcional: sem internet, o app usa as fontes do sistema) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/tailwind.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen flex flex-col overflow-hidden select-none">
+
+  <!-- TOP BAR: VIBRANT PURPLE -->
+  <header class="bg-gradient-to-r from-purple-950 via-purple-800 to-indigo-900 text-white shadow-lg shrink-0 z-30">
+    <div class="px-5 py-3 flex items-center justify-between gap-4">
+      
+      <!-- Brand & Active Room Summary -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center text-white shadow-inner shrink-0 ring-1 ring-white/20">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm font-extrabold tracking-wide uppercase text-purple-200">Room Architecture Planner</h1>
+            <span class="text-[10px] bg-purple-500/30 text-purple-100 font-bold px-2 py-0.5 rounded-full ring-1 ring-white/20">2D Studio</span>
+          </div>
+          <p id="topRoomSummary" class="text-xs text-purple-100/90 font-medium truncate">Quarto Solteiro • 4.0 × 3.0 m (12.0 m²)</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- New Room Button -->
+        <button id="btnNewRoom" class="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5 ring-1 ring-white/15 shadow-sm active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span class="hidden sm:inline">Novo Cômodo</span>
+        </button>
+
+        <!-- Catalog Button -->
+        <button id="btnCatalog" class="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5 ring-1 ring-white/15 shadow-sm active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          <span class="hidden sm:inline">Catálogo</span>
+        </button>
+
+        <!-- Custom Item Button -->
+        <button id="btnCreateItem" class="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5 ring-1 ring-white/15 shadow-sm active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          <span class="hidden sm:inline">Criar Móvel</span>
+        </button>
+
+        <!-- Export PNG -->
+        <button id="btnExportPNG" class="bg-white text-purple-900 hover:bg-purple-50 text-xs font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-md active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Exportar</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ROOM TABS BAR -->
+    <div class="px-5 py-2 bg-black/20 flex items-center gap-2 overflow-x-auto border-t border-white/10">
+      <div id="roomPillsContainer" class="flex items-center gap-1.5 shrink-0">
+        <!-- Room pills dynamically inserted -->
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="flex-1 flex overflow-hidden relative">
+    
+    <!-- LEFT SIDEBAR: EXPANDABLE PROJECT TREE & CONTEXTUAL INSPECTOR -->
+    <aside class="w-80 sm:w-96 bg-white shadow-xl flex flex-col z-20 shrink-0 border-r border-slate-200/60 overflow-hidden">
+      
+      <!-- Panel Header Tabs -->
+      <div class="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-purple-600"></div>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Árvore do Projeto</span>
+        </div>
+        <span id="treeStatsBadge" class="text-[11px] font-mono text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full font-semibold">1 Cômodo</span>
+      </div>
+
+      <!-- SCROLLABLE TREE CONTAINER -->
+      <div class="flex-1 overflow-y-auto p-3 space-y-2" id="layersTreeRoot">
+        <!-- Hierarchical project nodes inserted dynamically -->
+      </div>
+
+      <!-- CONTEXTUAL PROPERTY INSPECTOR -->
+      <div class="p-4 bg-slate-50 border-t border-slate-200/80 shrink-0" id="inspectorContainer">
+        <!-- Dynamically rendered based on active selection -->
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: INTERACTIVE BLUEPRINT CANVAS -->
+    <main class="flex-1 flex flex-col relative bg-slate-200/60 overflow-hidden" id="canvasWrapper">
+      
+      <!-- Top Canvas Quick Tools Overlay -->
+      <div class="absolute top-3 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
+        
+        <!-- Info Badge -->
+        <div class="glass-card px-3 py-1.5 rounded-xl shadow-sm text-xs font-semibold text-slate-700 flex items-center gap-2 pointer-events-auto border border-white/60">
+          <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span id="canvasStatusText">Arraste móveis, portas ou janelas livremente</span>
+        </div>
+
+        <!-- Canvas Controls -->
+        <div class="flex items-center gap-1.5 pointer-events-auto">
+          <!-- Rotate Shortcut -->
+          <button id="btnQuickRotate" class="glass-card hover:bg-purple-600 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-sm transition flex items-center gap-1.5 border border-white/60 active:scale-95" title="Girar 90° (Tecla R)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Girar (R)</span>
+          </button>
+
+          <!-- Add Window -->
+          <button id="btnQuickAddWindow" class="glass-card hover:bg-sky-600 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-sm transition flex items-center gap-1.5 border border-white/60 active:scale-95" title="Adicionar Janela no Cômodo Atual">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>+ Janela</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Canvas Container -->
+      <div class="flex-1 w-full h-full relative" id="canvasInner">
+        <canvas id="planCanvas" class="w-full h-full block"></canvas>
+      </div>
+
+      <!-- Bottom Floating Status Bar -->
+      <div class="px-4 py-2 bg-white/90 backdrop-blur border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600 shrink-0">
+        <div class="flex items-center gap-3">
+          <span id="statusCoords" class="font-mono text-purple-900 font-semibold">X: 0.00m • Y: 0.00m</span>
+          <span class="text-slate-300">|</span>
+          <span id="statusCollision" class="text-emerald-600 font-medium flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Layout Livre
+          </span>
+        </div>
+        <div class="flex items-center gap-4 text-[11px] text-slate-400">
+          <span>Grade: 0.5m</span>
+          <span>•</span>
+          <span>Encaixe Magnético: 5cm</span>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- MODAL: CRIAR MÓVEL PERSONALIZADO -->
+  <div id="modalCreateItem" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Novo Móvel Personalizado
+        </h3>
+        <button id="btnCloseModalCreate" class="p-1 rounded-lg text-slate-400 hover:text-slate-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nome do Móvel</label>
+          <input type="text" id="inputNewName" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-600 font-medium" placeholder="Ex: Estante de Livros">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Largura (m)</label>
+            <input type="number" id="inputNewW" step="0.05" min="0.2" max="6" value="1.0" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-600 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Comprimento (m)</label>
+            <input type="number" id="inputNewH" step="0.05" min="0.2" max="6" value="1.0" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-600 font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Cor de Destaque</label>
+          <div class="flex items-center gap-2">
+            <input type="color" id="inputNewColor" value="#8b5cf6" class="w-10 h-10 rounded-xl cursor-pointer border-0 p-0">
+            <div class="flex items-center gap-1.5 flex-1">
+              <button type="button" class="preset-color w-7 h-7 rounded-lg bg-blue-500 shadow-sm" data-color="#3b82f6"></button>
+              <button type="button" class="preset-color w-7 h-7 rounded-lg bg-emerald-500 shadow-sm" data-color="#10b981"></button>
+              <button type="button" class="preset-color w-7 h-7 rounded-lg bg-amber-500 shadow-sm" data-color="#f59e0b"></button>
+              <button type="button" class="preset-color w-7 h-7 rounded-lg bg-purple-500 shadow-sm" data-color="#8b5cf6"></button>
+              <button type="button" class="preset-color w-7 h-7 rounded-lg bg-rose-500 shadow-sm" data-color="#f43f5e"></button>
+              <button type="button" class="preset-color w-7 h-7 rounded-lg bg-slate-700 shadow-sm" data-color="#334155"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button id="btnCancelCreateItem" class="px-4 py-2 rounded-xl border text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+        <button id="btnConfirmCreateItem" class="px-4 py-2 rounded-xl bg-purple-700 text-white text-xs font-bold hover:bg-purple-800 shadow-md">Adicionar ao Quarto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CATÁLOGO PRONTO -->
+  <div id="modalCatalog" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between border-b pb-3 shrink-0">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+          Catálogo de Mobília
+        </h3>
+        <button id="btnCloseCatalog" class="p-1 rounded-lg text-slate-400 hover:text-slate-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto pr-1 space-y-4">
+        <!-- Quarto -->
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Quarto</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Cama Casal" data-w="1.4" data-h="1.9" data-color="#3b82f6">
+              <span class="font-bold text-xs block text-slate-800">Cama Casal</span>
+              <span class="text-[10px] text-slate-500 font-mono">1.40 × 1.90m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Cama Queen" data-w="1.6" data-h="2.0" data-color="#2563eb">
+              <span class="font-bold text-xs block text-slate-800">Cama Queen</span>
+              <span class="text-[10px] text-slate-500 font-mono">1.60 × 2.00m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Guarda-Roupa 3P" data-w="2.2" data-h="0.6" data-color="#10b981">
+              <span class="font-bold text-xs block text-slate-800">Guarda-Roupa 3P</span>
+              <span class="text-[10px] text-slate-500 font-mono">2.20 × 0.60m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Criado-mudo" data-w="0.45" data-h="0.45" data-color="#f59e0b">
+              <span class="font-bold text-xs block text-slate-800">Criado-Mudo</span>
+              <span class="text-[10px] text-slate-500 font-mono">0.45 × 0.45m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Penteadeira" data-w="1.0" data-h="0.45" data-color="#ec4899">
+              <span class="font-bold text-xs block text-slate-800">Penteadeira</span>
+              <span class="text-[10px] text-slate-500 font-mono">1.00 × 0.45m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Sapateira" data-w="0.8" data-h="0.35" data-color="#78716c">
+              <span class="font-bold text-xs block text-slate-800">Sapateira</span>
+              <span class="text-[10px] text-slate-500 font-mono">0.80 × 0.35m</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Escritório & Sala -->
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Trabalho & Sala</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Mesa Gamer / L" data-w="1.6" data-h="0.8" data-color="#6366f1">
+              <span class="font-bold text-xs block text-slate-800">Mesa Ampla</span>
+              <span class="text-[10px] text-slate-500 font-mono">1.60 × 0.80m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Sofá 3 Lugares" data-w="2.1" data-h="0.9" data-color="#475569">
+              <span class="font-bold text-xs block text-slate-800">Sofá 3 Lugares</span>
+              <span class="text-[10px] text-slate-500 font-mono">2.10 × 0.90m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Poltrona" data-w="0.85" data-h="0.85" data-color="#0284c7">
+              <span class="font-bold text-xs block text-slate-800">Poltrona</span>
+              <span class="text-[10px] text-slate-500 font-mono">0.85 × 0.85m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Rack com TV" data-w="1.8" data-h="0.4" data-color="#0f172a">
+              <span class="font-bold text-xs block text-slate-800">Rack + TV</span>
+              <span class="text-[10px] text-slate-500 font-mono">1.80 × 0.40m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Tapete Central" data-w="2.0" data-h="1.5" data-color="#cbd5e1">
+              <span class="font-bold text-xs block text-slate-800">Tapete</span>
+              <span class="text-[10px] text-slate-500 font-mono">2.00 × 1.50m</span>
+            </button>
+            <button class="btn-catalog-item p-2.5 rounded-xl border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 text-left transition" data-name="Estante Livros" data-w="0.9" data-h="0.35" data-color="#d97706">
+              <span class="font-bold text-xs block text-slate-800">Estante Livros</span>
+              <span class="text-[10px] text-slate-500 font-mono">0.90 × 0.35m</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-12 right-6 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-semibold flex items-center gap-2 transform translate-y-20 opacity-0 transition duration-300 z-50 pointer-events-none">
+    <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    <span id="toastMsg">Ação concluída</span>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

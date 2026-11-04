@@ -1,0 +1,47 @@
+/* Estilos próprios do Multi-Room Architecture Planner.
+   As classes utilitárias vêm de css/tailwind.css (gerado por `npm run build:css`). */
+
+* {
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom discreet scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Canvas styling */
+#planCanvas {
+  touch-action: none;
+  cursor: default;
+}
+#planCanvas.canvas-drag {
+  cursor: grabbing;
+}
+#planCanvas.canvas-resize {
+  cursor: nwse-resize;
+}
+
+/* Subtle backdrop blur card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
