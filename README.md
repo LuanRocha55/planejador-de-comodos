@@ -4,6 +4,8 @@ Planejador 2D de cômodos e móveis que roda direto no navegador. Monte a planta
 
 Sem backend e sem build obrigatório: é um site estático (HTML, CSS e JavaScript puro).
 
+**Abrir o app:** https://luanrocha55.github.io/planejador-de-comodos/
+
 ## Funcionalidades
 
 - **Vários cômodos:** Quarto Solteiro (4,0 × 3,0 m), Quarto Casal (4,5 × 3,5 m) e Sala de Estar (5,0 × 4,0 m) já configurados, mais a criação de cômodos com medidas livres.
@@ -73,3 +75,7 @@ npm run watch:css   # recompila automaticamente enquanto você edita
 ## Origem
 
 Criado em setembro de 2026 a partir de prototipação com o Gemini Canvas e organizado em arquivos separados em novembro de 2026.
+
+## Licença
+
+Distribuído sob a licença MIT. Veja o arquivo [LICENSE](LICENSE).

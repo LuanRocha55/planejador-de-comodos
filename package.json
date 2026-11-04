@@ -9,5 +9,11 @@
   },
   "devDependencies": {
     "tailwindcss": "3.4.17"
+  },
+  "license": "MIT",
+  "homepage": "https://luanrocha55.github.io/planejador-de-comodos/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LuanRocha55/planejador-de-comodos.git"
   }
 }
